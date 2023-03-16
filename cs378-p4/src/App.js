@@ -28,7 +28,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 
-const databaseURL = "https://cs378-24067-default-rtdb.firebaseio.com/";
+const databaseURL = "https://possible-p4-fd-default-rtdb.firebaseio.com/";
 
 export default function App() {
   const [firstInputValue, setFirstInputValue] = useState(null);
@@ -45,25 +45,30 @@ export default function App() {
   const auth = getAuth(app);
 
   const sendData = () => {
-    setFirstInputValue("");
-    setPostType(null);
-    const sampleDict = {
-      type: postType,
-      date: new Date(),
-      text: firstInputValue
-    };
-    return fetch(`${databaseURL + "/testData"}/.json`, {
-      method: "POST",
-      body: JSON.stringify(sampleDict)
-    }).then((res) => {
-      if (res.status !== 200) {
-        setDataPostResult("There was an error: " + res.statusText);
-        // throw new Error(res.statusText);
-      } else {
-        setDataPostResult("Successfully sent. Check Firebase console.");
-        return;
-      }
-    });
+    if(curUser !== null) {
+      console.log("sending items");
+      setFirstInputValue("");
+      setPostType(null);
+      const sampleDict = {
+        type: curUser.uid,
+        date: new Date(),
+        text: firstInputValue
+      };
+      return fetch(`${databaseURL + "/testData"}/.json`, {
+        method: "POST",
+        body: JSON.stringify(sampleDict)
+      }).then((res) => {
+        if (res.status !== 200) {
+          setDataPostResult("There was an error: " + res.statusText);
+          // throw new Error(res.statusText);
+        } else {
+          setDataPostResult("Successfully sent. Check Firebase console.");
+          return;
+        }
+      });
+    } else {
+      alert("no one logged into account")
+    }
   };
 
   function createAccount () {
@@ -72,6 +77,7 @@ export default function App() {
         // Signed in 
         const user = userCredential.user;
         setCurUser(user);
+        setRetrieveType(user.uid);
         console.log("user created");
       })
       .catch((error) => {
@@ -87,6 +93,7 @@ export default function App() {
         // Signed in 
         const user = userCredential.user;
         setCurUser(user);
+        setRetrieveType(user.uid);
         console.log("user logged in");
       })
       .catch((error) => {
@@ -100,6 +107,8 @@ export default function App() {
     signOut(auth).then(() => {
       // Sign-out successful.
       setCurUser(null);
+      setRetrieveType(null);
+      setSecondInputValue(null);
       alert("successfully logged out")
     }).catch((error) => {
       // An error happened.
@@ -109,10 +118,31 @@ export default function App() {
 
 
   function GroceryList () {
-    if(curUser){
-      return <p> grocery list </p>;
+    if(curUser !== null){
+      
+      setRetrieveType(curUser.uid);
+      console.log(curUser.uid);
+      return (
+        <div>
+          <Button variant="contained" onClick={() => getData()}>
+            Get My List
+          </Button>
+          <p> ~~~~ Grocery List ~~~~ </p>
+          {secondInputValue && secondInputValue.length
+            ? secondInputValue.map(function (data) {
+                return (
+                  <span className="retrieved-data">
+                    {data["text"] +
+                      ", "}
+                  </span>
+                );
+              })
+            : "No list for user "}
+          
+        </div>
+      );
     } else{
-      return <p>no one logged in to account</p>;
+      return <p> no one logged in to account </p>;
     }
   }
 
@@ -205,7 +235,7 @@ export default function App() {
         </Button>
       </div>
 
-      <GroceryList> </GroceryList>
+      
       <div className="container">
         <TextField
             id="outlined-basic"
@@ -215,23 +245,13 @@ export default function App() {
             onChange={handleInputChange}
             variant="outlined"
           />
-        <Button variant="contained" onClick={() => getData()}>
-          Retrieve data
+        <Button variant="contained" onClick={() => sendData()}>
+          Save List
         </Button>
-        <text>{dataRetrieveResult}</text>
-        {secondInputValue && secondInputValue.length
-          ? secondInputValue.map(function (data) {
-              return (
-                <span className="retrieved-data">
-                  {"Text: " +
-                    data["text"] +
-                    ", Date: " +
-                    data["date"].slice(0, 10) +
-                    " "}
-                </span>
-              );
-            })
-          : "No data with category " + retrieveType}
+        <GroceryList> </GroceryList>
+
+
+        
       </div>
     </div>
   );
