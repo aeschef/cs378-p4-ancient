@@ -8,6 +8,7 @@ import {
   InputLabel,
   FormControl
 } from "@mui/material";
+
 //Authorization imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
@@ -22,17 +23,12 @@ const firebaseConfig = {
   messagingSenderId: "198847952081",
   appId: "1:198847952081:web:86b20e893b0495b28381f0",
   measurementId: "G-W0MNDYED6Q"
-};
+}; 
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 
-// Initialize Firebase Authentication and get a reference to the service
-
-
-//url to database
-const databaseURL = "https://possible-p4-fd-default-rtdb.firebaseio.com/";
+const databaseURL = "https://cs378-24067-default-rtdb.firebaseio.com/";
 
 export default function App() {
   const [firstInputValue, setFirstInputValue] = useState(null);
@@ -45,15 +41,8 @@ export default function App() {
   const [password, setPassword] = useState(null);
   const [curUser, setCurUser] = useState(null);
 
+    
   const auth = getAuth(app);
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is signed in, see docs for a list of available properties
-      setCurUser(user);
-    } else {
-      setCurUser(null);
-    }
-  });
 
   const sendData = () => {
     setFirstInputValue("");
@@ -77,68 +66,37 @@ export default function App() {
     });
   };
 
-  // complete
-  function createAcct(){
-    const auth = getAuth();
+  function createAccount () {
     createUserWithEmailAndPassword(auth, username, password)
       .then((userCredential) => {
         // Signed in 
         const user = userCredential.user;
         setCurUser(user);
+        console.log("user created");
       })
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        alert(errorMessage);
+        alert("ERROR: " + errorMessage);
       });
   }
 
-  //
-  function loginToAccount (){
-    const auth = getAuth();
+  function loginAccount(){
     signInWithEmailAndPassword(auth, username, password)
       .then((userCredential) => {
         // Signed in 
         const user = userCredential.user;
         setCurUser(user);
-        setRetrieveType(user.uid);
-        alert("new user" + user.uid);
+        console.log("user logged in");
       })
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
+        alert("ERROR: " + errorMessage);
       });
   }
 
-  ///TODO make this work
-  function GroceryList (){
-    if (curUser !== null) {
-      // User is signed in, see docs for a list of available properties
-      const name = curUser.uid;
-      //TODO retrieve info.... name == category
-      return  (
-        <div>
-          getData()
-          <TextField
-          id="outlined-basic"
-          label="Add to Grocery List"
-          fullWidth
-          value={firstInputValue}
-          onChange={handleInputChange}
-          variant="outlined"
-          />
-          <Button variant="contained" onClick={() => sendData()}>
-            Save Grocery List
-          </Button> <text> loggedin as {name} </text>
-        </div>
-      );
-    } else {
-      return <text> Not logged in to an account </text>;
-    }
-  }
-
-  //TODO complete
-  function logOut() {
+  function logoutAccount(){
     signOut(auth).then(() => {
       // Sign-out successful.
       setCurUser(null);
@@ -149,12 +107,20 @@ export default function App() {
     });
   }
 
+
+  function GroceryList () {
+    if(curUser){
+      return <p> grocery list </p>;
+    } else{
+      return <p>no one logged in to account</p>;
+    }
+  }
+
   const getData = () => {
     //console.log(this.props.videoTime)
     fetch(`${databaseURL + "/testData"}/.json`)
       .then((res) => {
         console.log(res);
-        
         if (res.status !== 200) {
           setDataRetrieveResult("There was an error: " + res.statusText);
           // throw new Error(res.statusText);
@@ -175,7 +141,6 @@ export default function App() {
       });
   };
 
-  //TODO use to change firstInputvalues
   const handleInputChange = (event) => {
     const target = event.target;
     setFirstInputValue(target.value);
@@ -188,82 +153,85 @@ export default function App() {
     console.log(target.value);
   };
 
-  const handleUsernameChange = (event) => {
+  const handleUserChange = (event) => {
     const target = event.target;
     setUsername(target.value);
     console.log(target.value);
   }
-
   const handlePassChange = (event) => {
     const target = event.target;
     setPassword(target.value);
     console.log(target.value);
   }
 
+  const handleRetrieveTypeChange = (event) => {
+    const target = event.target;
+    setRetrieveType(target.value);
+    console.log(target.value);
+  };
+
   return (
     <div className="App">
-      <h1>React + Firebase Tutorial</h1>
+      <h1>Grocery List</h1>
       <h2>CS378 23Spring P4</h2>
       <div className="container">
         <TextField
           id="outlined-basic"
-          label="Enter Email"
+          label="Email"
           fullWidth
           value={username}
-          onChange={handleUsernameChange}
+          onChange={handleUserChange}
           variant="outlined"
         />
         <TextField
           id="outlined-basic"
-          label="Enter Password"
+          label="Password"
           fullWidth
           value={password}
           onChange={handlePassChange}
           variant="outlined"
         />
-        <FormControl fullWidth>
-          <InputLabel id="demo-simple-select-label">Category</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={postType}
-            label="Category"
-            onChange={handlePostTypeChange}
-          >
-            <MenuItem value={"A"}>A</MenuItem>
-            <MenuItem value={"B"}>B</MenuItem>
-            <MenuItem value={"C"}>C</MenuItem>
-          </Select>
-        </FormControl>
-        <Button variant="contained" onClick={() => createAcct()}>
-          Create Account
+
+        <Button variant="contained" onClick={() => createAccount()}>
+          Create New Account
         </Button>
-        <Button variant="contained" onClick={() => loginToAccount()}>
-          Login to Account
+
+        <Button variant="contained" onClick={() => loginAccount()}>
+          Login
         </Button>
-        <text>{dataPostResult}</text>
+
+        <Button variant="contained" onClick={() => logoutAccount()}>
+          Logout
+        </Button>
       </div>
+
+      <GroceryList> </GroceryList>
       <div className="container">
-        <GroceryList label="Grocery List"> </GroceryList>
+        <TextField
+            id="outlined-basic"
+            label="Add items"
+            fullWidth
+            value={firstInputValue}
+            onChange={handleInputChange}
+            variant="outlined"
+          />
+        <Button variant="contained" onClick={() => getData()}>
+          Retrieve data
+        </Button>
         <text>{dataRetrieveResult}</text>
         {secondInputValue && secondInputValue.length
           ? secondInputValue.map(function (data) {
               return (
                 <span className="retrieved-data">
-                  {"Items: " +
-                    data["text"]}
+                  {"Text: " +
+                    data["text"] +
+                    ", Date: " +
+                    data["date"].slice(0, 10) +
+                    " "}
                 </span>
               );
             })
           : "No data with category " + retrieveType}
-        <Button variant="contained" onClick={() => sendData()}>
-          Retrieve data
-        </Button>
-        <Button id="logout" variant="contained"  onClick={() => logOut()}>
-          LOG OUT
-        </Button>
-        
-        
       </div>
     </div>
   );
