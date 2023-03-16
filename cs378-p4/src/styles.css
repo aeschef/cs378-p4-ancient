@@ -1,0 +1,21 @@
+.App {
+    font-family: sans-serif;
+    text-align: center;
+  }
+  
+  .container {
+    margin: 10vw;
+    display: grid;
+    gap: 10px;
+    
+  }
+
+  #logout {
+    background-color: rgb(213, 81, 60);
+  }
+  
+  .retrieved-data {
+    clear: both;
+    display: inline-block;
+    width: 100%;
+  }
